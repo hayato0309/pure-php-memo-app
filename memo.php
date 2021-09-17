@@ -1,21 +1,13 @@
-<h2>Practice</h2>
-
+<?php require('dbconnect.php'); ?>
 <?php
-try {
-    $db = new PDO(
-        'mysql:dbname=memo_app;host=localhost;charset=utf8',
-        'root',
-        'root',
-        array(
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        )
-    );
-} catch(PDOException $e) {
-    echo '接続エラー: ' . $e->getMessage(); 
+$id = $_REQUEST['id'];
+if (!is_numeric($id) || $id <= 0) {
+    print('1以上の数字で指定してください');
+    exit();
 }
 
-$memos = $db->query('SELECT * FROM memos WHERE id=1');
+$memos = $db->prepare('SELECT * FROM memos WHERE id=?');
+$memos->execute(array($_REQUEST['id']));
 $memo = $memos->fetch();
 ?>
 

@@ -1,28 +1,39 @@
-<h2>Practice</h2>
-
+<?php require('dbconnect.php'); ?>
 <?php
-try {
-    $db = new PDO(
-        'mysql:dbname=memo_app;host=localhost;charset=utf8',
-        'root',
-        'root',
-        array(
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        )
-    );
-} catch (PDOException $e) {
-    echo 'DB接続エラー: ' . $e->getMessage();
+if (isset($_REQUEST['page']) && is_numeric($_REQUEST['page'])) {
+    $page = $_REQUEST['page'];
+} else {
+    $page = 1;
 }
-
-$memos = $db->query('SELECT * FROM memos ORDER BY id DESC');
-
+$start = 5 * ($page - 1);
+$memos = $db->prepare('SELECT * FROM memos ORDER BY id LIMIT ?, 5');
+$memos->bindParam(1, $start, PDO::PARAM_INT);
+$memos->execute();
 ?>
 
 <article>
 <?php while ($memo = $memos->fetch()): ?>
-    <p><a href="#"><?php print(mb_substr($memo['memo'], 0, 50)); ?></a></p>
+    <p>
+        <a href="memo.php?id=<?php print($memo['id']); ?>">
+            <?php print(mb_substr($memo['memo'], 0, 50)); ?>
+            <?php print(mb_strlen($memo['memo']) > 50 ? '...' : '') ?>
+        </a>
+    </p>
     <time><?php print $memo['created_at']; ?></time>
     <hr>
 <?php endwhile; ?>
+
+<?php if ($page >= 2): ?>
+<a href="index.php?page=<?php print($page - 1); ?>"><?php print($page - 1); ?>ページ目へ</a>
+<?php endif; ?>
+|
+<?php 
+$counts = $db->query('SELECT COUNT(*) as cnt FROM memos');
+$count = $counts->fetch();
+$max_page = floor($count['cnt'] / 5) + 1;
+if ($page < $max_page):
+?>
+<a href="index.php?page=<?php print($page + 1); ?>"><?php print($page + 1); ?>ページ目へ</a>
+<?php endif; ?>
+
 </article>
